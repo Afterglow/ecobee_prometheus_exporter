@@ -171,6 +171,7 @@ class EcobeeCollector(): # pylint: disable=too-few-public-methods
 
     def running_equipment(self, thermostat):
         """Gather running equipment."""
+        self._log.debug(f"Running Equipment: {thermostat.equipment_status}")
         self.fan_status.labels(
             thermostat_name=thermostat.name,
             type="fan").set(
