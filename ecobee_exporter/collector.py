@@ -94,6 +94,12 @@ class EcobeeCollector(): # pylint: disable=too-few-public-methods
             selection_match="",
             include_equipment_status=True)
         # self.metrics = []
+        self.equipment_names = ["heatPump", "heatPump2", "heatPump3",
+                                "compCool1", "compCool2",
+                                "auxHeat1", "auxHeat2", "auxHeat3",
+                                "fan", "humidifier", "dehumidifier",
+                                "ventilator", "economizer",
+                                "compHotWater", "auxHotWater"]
         self._prefix = "ecobee_"
         self._log = logging.getLogger(__name__)
         self.init_metrics()
@@ -160,6 +166,15 @@ class EcobeeCollector(): # pylint: disable=too-few-public-methods
             namespace=namespace
         )
 
+        for e in self.equipment_names:
+            setattr(self, e, Gauge(
+                name=e,
+                documentation=e,
+                labelnames=runtime_labels,
+                namespace=namespace
+            )
+        )
+
     @staticmethod
     def convert_string(string_value):
         """Convert a string value to bool."""
@@ -184,6 +199,15 @@ class EcobeeCollector(): # pylint: disable=too-few-public-methods
             thermostat_name=thermostat.name,
             type="cool").set(
                 1 if re.search("cool", thermostat.equipment_status, re.IGNORECASE) else 0)
+
+        equipment_list = thermostat.equipment_status.split(',')
+        for e in self.equipment_names:
+            gauge = getattr(self, e)
+            gauge.labels(
+                thermostat_name=thermostat.name,
+                type=e).set(
+                    e in equipment_list
+                )
 
     def runtime_data(self, thermostat):
         """Gather runtime data."""
